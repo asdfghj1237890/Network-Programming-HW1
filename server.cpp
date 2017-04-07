@@ -71,16 +71,16 @@ public:
     std::string changeDir(const std::string& newPath) {
         if (chdir(newPath.c_str()) < 0) {
             if (errno == ENOENT) {
-                return newPath + ": No such file or directory";
+                return "\n" + newPath + ": No such file or directory\n";
             }
             else if (errno == ENOTDIR) {
-                return newPath + " is not a directory";
+                return "\n" + newPath + " is not a directory\n";
             }
             else if (errno == EACCES) {
-                return newPath + ": Permission denied";
+                return "\n" + newPath + ": Permission denied\n";
             }
             else {
-                return newPath + ": Unexpected error";
+                return "\n" + newPath + ": Unexpected error\n";
             }
         }
         updatePath();
@@ -128,7 +128,7 @@ public:
         if (!dir) {
             char buffer[maxn];
             cleanBuffer(buffer);
-            sprintf(buffer, "%s: Cannot open the directory", wd.getPath().c_str());
+            sprintf(buffer, "\n[!]%s: Cannot open the directory\n\n", wd.getPath().c_str());
             Write(fd, buffer);
         }
         else {
@@ -250,7 +250,7 @@ public:
     static void undef(const int& fd, const std::string& command) {
         char buffer[maxn];
         cleanBuffer(buffer);
-        sprintf(buffer, "%s: Command not found", command.c_str());
+        sprintf(buffer, "\n[!]%s: Command not found\n", command.c_str());
         Write(fd, buffer);
     }
 
@@ -320,7 +320,7 @@ private:
     static int Read(const int& fd, char* buffer, const int& n = maxn) {
         int byteRead = read(fd, buffer, n);
         if (byteRead < 0) {
-            fprintf(stderr, "read() Error\n");
+            fprintf(stderr, "\n[!]read() Error\n\n");
             exit(EXIT_FAILURE);
         }
         return byteRead;
@@ -328,7 +328,7 @@ private:
     static int Write(const int& fd, const char* buffer, const int& n = maxn) {
         int byteWrite = write(fd, buffer, sizeof(char) * n);
         if (byteWrite < 0) {
-            fprintf(stderr, "write() Error\n");
+            fprintf(stderr, "\n[!]write() Error\n\n");
             exit(EXIT_FAILURE);
         }
         return byteWrite;
@@ -339,13 +339,13 @@ private:
         while (byteRead < size) {
             int n = read(fileno(fp), buffer, maxn);
             if (n < 0) {
-                fprintf(stderr, "Error When Reading File\n");
+                fprintf(stderr, "\n[!]Error When Reading File\n\n");
                 exit(EXIT_FAILURE);
             }
             byteRead += n;
             int m = Write(fd, buffer, n);
             if (m != n) {
-                fprintf(stderr, "Error When Transmitting Data\n");
+                fprintf(stderr, "\n[!]Error When Transmitting Data\n\n");
                 exit(EXIT_FAILURE);
             }
         }
@@ -356,13 +356,13 @@ private:
         while (byteWrite < size) {
             int n = read(fd, buffer, maxn);
             if (n < 0) {
-                fprintf(stderr, "Error When Receiving Data\n");
+                fprintf(stderr, "\n[!]Error When Receiving Data\n\n");
                 exit(EXIT_FAILURE);
             }
             byteWrite += n;
             int m = write(fileno(fp), buffer, n);
             if (m != n) {
-                fprintf(stderr, "Error When Writing to File\n");
+                fprintf(stderr, "\n[!]Error When Writing to File\n\n");
                 exit(EXIT_FAILURE);
             }
         }
@@ -381,11 +381,11 @@ void sigChld(int signo);
 int main(int argc, char const *argv[])
 {
     if (argc != 2) {
-        fprintf(stderr, "usage: %s <port>\n", argv[0]);
+        fprintf(stderr, "[!]usage: %s <port>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
     if (!isValidArguments(argc, argv)) {
-        fprintf(stderr, "Invalid Arguments\n");
+        fprintf(stderr, "[!]Invalid Arguments\n");
         exit(EXIT_FAILURE);
     }
     init();
@@ -406,14 +406,14 @@ int main(int argc, char const *argv[])
             char clientInfo[1024];
             strcpy(clientInfo, inet_ntoa(clientAddr.sin_addr));
             int clientPort = static_cast<int>(clientAddr.sin_port);
-            fprintf(stdout, "Connection from %s, port %d\n", clientInfo, clientPort);
+            fprintf(stdout, "[C]Connection from %s, port %d\n", clientInfo, clientPort);
             TCPServer(clientfd);
             close(clientfd);
-            fprintf(stdout, "Client %s:%d terminated\n", clientInfo, clientPort);
+            fprintf(stdout, "[C]Client %s:%d terminated\n", clientInfo, clientPort);
             exit(EXIT_SUCCESS);
         }
         else {
-            fprintf(stdout, "Start Child Process pid = %d\n", static_cast<int>(childPid));
+            fprintf(stdout, "[C]Start Child Process pid = %d\n", static_cast<int>(childPid));
         }
         close(clientfd);
     }
@@ -426,7 +426,7 @@ bool isValidArguments(int argc, char const *argv[]) {
     }
     for (const char* ptr = argv[1]; *ptr; ++ptr) {
         if (!isdigit(*ptr)) {
-            fprintf(stderr, "%s is not a number\n", argv[1]);
+            fprintf(stderr, "\n[!]%s is not a number\n\n", argv[1]);
             return false;
         }
     }
@@ -437,7 +437,7 @@ int serverInit(const int& port) {
     int listenId;
     sockaddr_in serverAddr;
     if ((listenId = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        fprintf(stderr, "Socket Error\n");
+        fprintf(stderr, "\n[!]Socket Error\n\n");
         exit(EXIT_FAILURE);
     }
     memset(&serverAddr, 0, sizeof(serverAddr));
@@ -445,7 +445,7 @@ int serverInit(const int& port) {
     serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
     serverAddr.sin_port = htons(port);
     if (bind(listenId, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(sockaddr_in)) < 0) {
-        fprintf(stderr, "Bind Error\n");
+        fprintf(stderr, "\n[!]Bind Error\n\n");
         exit(EXIT_FAILURE);
     }
     listen(listenId, 256);
@@ -455,7 +455,7 @@ int serverInit(const int& port) {
 void init() {
     if (!WorkingDirectory::isDirExist("./Upload")) {
         if (mkdir("Upload", 0777) < 0) {
-            fprintf(stderr, "Error: mkdir %s: %s\n", "Upload", strerror(errno));
+            fprintf(stderr, "\n[!]Error: mkdir %s: %s\n", "Upload", strerror(errno));
             exit(EXIT_FAILURE);
         }
     }
@@ -551,7 +551,7 @@ void sigChld(int signo) {
     pid_t pid;
     int stat;
     while ((pid = waitpid(-1, &stat, WCONTINUED)) != -1) {
-        std::string buffer = "Child Process " + std::to_string(static_cast<int>(pid)) + " terminated.\n";
+        std::string buffer = "[!]Child Process " + std::to_string(static_cast<int>(pid)) + " terminated.\n";
         if (write(fileno(stdout), buffer.c_str(), buffer.length()) < 0) {
             exit(EXIT_FAILURE);
         }

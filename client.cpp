@@ -95,7 +95,7 @@ private:
     void updatePath() {
         char buffer[maxn];
         if (!getcwd(buffer, maxn)) {
-            fprintf(stderr, "getcwd Error\nProgram Terminated!\n");
+            fprintf(stderr, "\n[!]getcwd Error\nProgram Terminated!\n\n");
             exit(EXIT_FAILURE);
         }
         path = buffer;
@@ -143,6 +143,7 @@ public:
         if (ret.back() == '\n') {
             ret.pop_back();
         }
+        ret += "\n";
         return ret;
     }
     static void cd(const int& fd, const std::string& argu) {
@@ -161,28 +162,28 @@ public:
         const std::string nargu = processArgument(argu);
         int chk = isExist(nargu);
         if (chk == -2) {
-            fprintf(stderr, "%s: Unexpected Error\n", nargu.c_str());
+            fprintf(stderr, "\n[!]%s: Unexpected Error\n\n", nargu.c_str());
             return false;
         }
         else if (chk == -1) {
-            fprintf(stderr, "%s: Permission denied\n", nargu.c_str());
+            fprintf(stderr, "\n[!]%s: Permission denied\n\n", nargu.c_str());
             return false;
         }
         else if (chk == 0) {
-            fprintf(stderr, "%s: No such file or directory\n", nargu.c_str());
+            fprintf(stderr, "\n[!]%s: No such file or directory\n\n", nargu.c_str());
             return false;
         }
         else if (chk == 2) {
-            fprintf(stderr, "%s is a directory\n", nargu.c_str());
+            fprintf(stderr, "\n[!]%s is a directory\n\n", nargu.c_str());
             return false;
         }
         else if (chk == 3) {
-            fprintf(stderr, "%s is not a regular file\n", nargu.c_str());
+            fprintf(stderr, "\n[!]%s is not a regular file\n\n", nargu.c_str());
             return false;
         }
         FILE* fp = fopen(nargu.c_str(), "rb");
         if (!fp) {
-            fprintf(stderr, "%s: Unexpected Error\n", nargu.c_str());
+            fprintf(stderr, "\n[!]%s: Unexpected Error\n\n", nargu.c_str());
             return false;
         }
         unsigned long fileSize;
@@ -196,17 +197,17 @@ public:
         cleanBuffer(buffer);
         Read(fd, buffer);
         if (std::string(buffer) == "ERROR_OPEN_FILE") {
-            fprintf(stderr, "Cannot open file \"%s\" on Remote Server\n", getFileName(argu.c_str()).c_str());
+            fprintf(stderr, "\n[!]Cannot open file \"%s\" on Remote Server\n\n", getFileName(argu.c_str()).c_str());
             fclose(fp);
             return false;
         }
-        printf("Upload File \"%s\"\n", getFileName(nargu).c_str());
+        printf("\n[U]Uploadinginginginging File \"%s\"\n", getFileName(nargu).c_str());
         cleanBuffer(buffer);
         sprintf(buffer, "filesize = %lu", fileSize);
         Write(fd, buffer);
-        printf("File size: %lu bytes\n", fileSize);
+        printf("[U]File size: %lu bytes\n", fileSize);
         WriteFile(fd, fp, fileSize);
-        printf("Upload File \"%s\" Completed\n", getFileName(nargu).c_str());
+        printf("[U]Upload File \"%s\" Completed\n\n", getFileName(nargu).c_str());
         fclose(fp);
         return true;
     }
@@ -219,23 +220,23 @@ public:
         cleanBuffer(buffer);
         Read(fd, buffer);
         if (std::string(buffer) == "UNEXPECTED_ERROR") {
-            fprintf(stderr, "Unexpected Error\n");
+            fprintf(stderr, "\n[!]Unexpected Error\n\n");
             return false;
         }
         else if (std::string(buffer) == "PERMISSION_DENIED") {
-            fprintf(stderr, "%s: Permission denied\n", nargu.c_str());
+            fprintf(stderr, "\n[!]%s: Permission denied\n\n", nargu.c_str());
             return false;
         }
         else if (std::string(buffer) == "FILE_NOT_EXIST") {
-            fprintf(stderr, "%s: No such file or directory\n", nargu.c_str());
+            fprintf(stderr, "\n[!]%s: No such file or directory\n\n", nargu.c_str());
             return false;
         }
         else if (std::string(buffer) == "IS_DIR") {
-            fprintf(stderr, "%s is a directory\n", nargu.c_str());
+            fprintf(stderr, "\n[!]%s is a directory\n\n", nargu.c_str());
             return false;
         }
         else if (std::string(buffer) == "NOT_REGULAR_FILE") {
-            fprintf(stderr, "%s is not a regular file\n", nargu.c_str());
+            fprintf(stderr, "\n[!]%s is not a regular file\n\n", nargu.c_str());
             return false;
         }
         std::string filename = getFileName(nargu);
@@ -247,7 +248,7 @@ public:
         }
         FILE* fp = fopen(filename.c_str(), "wb");
         if (!fp) {
-            fprintf(stderr, "%s: File Open Error\n", filename.c_str());
+            fprintf(stderr, "\n[!]%s: File Open Error\n\n", filename.c_str());
             cleanBuffer(buffer);
             sprintf(buffer, "ERROR_OPEN_FILE");
             Write(fd, buffer);
@@ -256,13 +257,13 @@ public:
         cleanBuffer(buffer);
         sprintf(buffer, "OK");
         Write(fd, buffer);
-        printf("Download File \"%s\"\n", getFileName(nargu).c_str());
+        printf("\n[D]Downloadinginginginging File \"%s\"\n", getFileName(nargu).c_str());
         unsigned long fileSize;
         Read(fd, buffer);
         sscanf(buffer, "%*s%*s%lu", &fileSize);
-        printf("File size: %lu bytes\n", fileSize);
+        printf("[D]File size: %lu bytes\n", fileSize);
         ReadFile(fd, fp, fileSize);
-        printf("Download File \"%s\" Completed\n", getFileName(nargu).c_str());
+        printf("[D]Download File \"%s\" Completed\n\n", getFileName(nargu).c_str());
         fclose(fp);
         return true;
     }
@@ -333,7 +334,7 @@ private:
     static int Read(const int& fd, char* buffer, const int& n = maxn) {
         int byteRead = read(fd, buffer, n);
         if (byteRead < 0) {
-            fprintf(stderr, "read() Error\n");
+            fprintf(stderr, "[!]read() Error\n");
             exit(EXIT_FAILURE);
         }
         return byteRead;
@@ -341,7 +342,7 @@ private:
     static int Write(const int& fd, const char* buffer, const int& n = maxn) {
         int byteWrite = write(fd, buffer, sizeof(char) * n);
         if (byteWrite < 0) {
-            fprintf(stderr, "write() Error\n");
+            fprintf(stderr, "[!]write() Error\n");
             exit(EXIT_FAILURE);
         }
         return byteWrite;
@@ -352,13 +353,13 @@ private:
         while (byteRead < size) {
             int n = read(fileno(fp), buffer, maxn);
             if (n < 0) {
-                fprintf(stderr, "Error When Reading File\n");
+                fprintf(stderr, "[!]Error When Reading File\n");
                 exit(EXIT_FAILURE);
             }
             byteRead += n;
             int m = Write(fd, buffer, n);
             if (m != n) {
-                fprintf(stderr, "Error When Transmitting Data\n");
+                fprintf(stderr, "[!]Error When Transmitting Data\n");
                 exit(EXIT_FAILURE);
             }
         }
@@ -369,13 +370,13 @@ private:
         while (byteWrite < size) {
             int n = read(fd, buffer, maxn);
             if (n < 0) {
-                fprintf(stderr, "Error When Receiving Data\n");
+                fprintf(stderr, "[!]Error When Receiving Data\n");
                 exit(EXIT_FAILURE);
             }
             byteWrite += n;
             int m = write(fileno(fp), buffer, n);
             if (m != n) {
-                fprintf(stderr, "Error When Writing to File\n");
+                fprintf(stderr, "[!]Error When Writing to File\n");
                 exit(EXIT_FAILURE);
             }
         }
@@ -397,11 +398,11 @@ std::string nextArgument(std::string& base);
 int main(int argc, char const *argv[])
 {
     if (argc != 3) {
-        fprintf(stderr, "usage: %s <server address> <port>\n", argv[0]);
+        fprintf(stderr, "[!]usage: %s <server address> <port>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
     if (!isValidArguments(argc, argv)) {
-        fprintf(stderr, "Invalid Arguments\n");
+        fprintf(stderr, "[!]Invalid Arguments\n");
         exit(EXIT_FAILURE);
     }
     init();
@@ -421,12 +422,12 @@ bool isValidArguments(int argc, char const *argv[]) {
     sockaddr_in tmp;
     memset(&tmp, 0, sizeof(tmp));
     if (inet_pton(AF_INET, argv[1], &tmp.sin_addr) <= 0) {
-        fprintf(stderr, "%s: Inet_pton error\n", argv[1]);
+        fprintf(stderr, "[!]%s: ip address error\n", argv[1]);
         return false;
     }
     for (const char* ptr = argv[2]; *ptr; ++ptr) {
         if (!isdigit(*ptr)) {
-            fprintf(stderr, "%s is not a number\n", argv[2]);
+            fprintf(stderr, "[!]%s is not a number\n", argv[2]);
             return false;
         }
     }
@@ -446,18 +447,18 @@ int clientInit(const char* addr, const int& port) {
     int sockfd;
     sockaddr_in serverAddr;
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        fprintf(stderr, "Socket Error\n");
+        fprintf(stderr, "[!]Socket Error\n");
         exit(EXIT_FAILURE);
     }
     memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
     if (inet_pton(AF_INET, addr, &serverAddr.sin_addr) <= 0) {
-        fprintf(stderr, "%s: Inet_pton Error\n", addr);
+        fprintf(stderr, "[!]%s: Inet_pton Error\n", addr);
         exit(EXIT_FAILURE);
     }
     if (connect(sockfd, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(sockaddr_in)) < 0) {
-        fprintf(stderr, "Connect Error\n");
+        fprintf(stderr, "[!]Connect Error\n");
         exit(EXIT_FAILURE);
     }
     return sockfd;
@@ -470,7 +471,7 @@ void closeClient(const int& fd) {
 void init() {
     if (!WorkingDirectory::isDirExist("./Download")) {
         if (mkdir("Download", 0777) < 0) {
-            fprintf(stderr, "Error: mkdir %s: %s\n", "Download", strerror(errno));
+            fprintf(stderr, "[!]Error: mkdir %s: %s\n", "Download", strerror(errno));
             exit(EXIT_FAILURE);
         }
     }
@@ -498,17 +499,8 @@ void TCPClient(const int& fd, const char* host) {
             }
             else {
                 ClientFunc::q(fd);
-                printf("\nConnection Terminated\n\n");
+                printf("\n[!]Connection Terminated\n\n");
                 break;
-            }
-        }
-        else if (command == "cwd") {
-            std::string argu = nextArgument(userInput);
-            if (argu != "") {
-                    fprintf(stderr, "Unrecognized Argument %s\n", argu.c_str());
-            }
-            else {
-                printf("%s\n", ClientFunc::pwd(fd).c_str());
             }
         }
         else if (command == "ls") {
@@ -539,7 +531,7 @@ void TCPClient(const int& fd, const char* host) {
             std::string argu = nextArgument(userInput);
             if (argu == "" || argu[0] == '-') {
                 if (argu == "") {
-                    printf("usage: u <file>\nu --help for more information\n");
+                    printf("usage: u <file>\n");
                     continue;
                 }
                 else {
@@ -554,7 +546,7 @@ void TCPClient(const int& fd, const char* host) {
             std::string argu = nextArgument(userInput);
             if (argu == "" || argu[0] == '-') {
                 if (argu == "") {
-                    printf("usage: d <file>\nd --help for more information\n");
+                    printf("usage: d <file>\n");
                     continue;
                 }
                 else {
@@ -574,8 +566,6 @@ void TCPClient(const int& fd, const char* host) {
 void printInfo() {
     puts("");
     puts("Available Commands:");
-    puts("--[cwd]");
-    puts("     print current working directory on remote server");
     puts("--[ls]");
     puts("     list information about the files in current directory on remote server");
     puts("--[cd <path>]");
